@@ -33,7 +33,7 @@ def mostrar(fig):
 
 
 def tabla(df, formato="{:.8g}", alto=None):
-    st.dataframe(df.style.format(formato, na_rep=""), hide_index=True, height=alto)
+    st.dataframe(df.style.format(formato, na_rep=""), hide_index=True)
 
 
 def lista(pasos):
