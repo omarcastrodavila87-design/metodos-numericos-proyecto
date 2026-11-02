@@ -27,7 +27,7 @@ Cada método muestra su gráfica, su tabla y una **resolución resumida** que us
 - `interpolacion.py`: `lagrange`, `newton`, `diferencias_divididas`, `spline_cubico`.
 - `raices.py`: `biseccion`, `newton_raphson`, `secante`, `raices_en_tabla` y `compilar_funcion` (lee f(x) sin usar `eval`).
 - `resolucion.py`: textos y tablas de la resolución resumida.
-- `estilo.py`: fondo y banner de la FIEE-UNMSM.
+- `estilo.py`: fondo y banner de la FIEE-UNMSM. Al inicio tiene constantes para cambiar los colores, la opacidad del recuadro blanco (`OPACIDAD_PANEL`) y el ancho del contenido (`ANCHO_MAX`); con un recuadro más transparente o más angosto se ve más el fondo.
 - `requirements.txt`: librerías necesarias.
 - `datos_ejemplo.csv` (opcional): si existe, se usa como datos de ejemplo; si no, la app trae una señal de ejemplo integrada.
 - `fondo_fiee.jpg` (opcional): foto de la facultad para usar como fondo. Si no existe, se usa un fondo de circuitos y ondas generado por código. Pesa menos de 1,5 MB.

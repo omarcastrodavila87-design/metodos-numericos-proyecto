@@ -14,6 +14,8 @@ import streamlit as st
 CARPETA = Path(__file__).parent
 COLOR_BANNER = "#0b2a5b"   # azul del banner y de las líneas del fondo (cámbialo si quieres)
 COLOR_ACENTO = "#c8102e"   # franja de acento del banner
+OPACIDAD_PANEL = 0.90      # opacidad del recuadro blanco del contenido (más bajo = se ve más el fondo)
+ANCHO_MAX = "1200px"       # ancho máximo del contenido; a los lados se ve el fondo
 MAX_BYTES = 1_500_000      # una imagen más pesada se ignora para que la página cargue rápido
 MIMES = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png"}
 
@@ -31,14 +33,16 @@ def _uri(ruta):
 
 
 def _svg_fondo(color):
-    """Fondo propio: ondas senoidales, pistas de circuito y marca de agua FIEE · UNMSM."""
+    """Fondo propio: degradado azul con ondas senoidales y pistas de circuito claras, y marca de agua FIEE · UNMSM."""
     w, h = 1600, 900
-    s = [f'<rect width="{w}" height="{h}" fill="#eef3fa"/>']
-    for amp, fase, y0, op in [(60, 0, 180, .22), (40, 1.3, 330, .15), (80, 2.1, 640, .18), (35, .6, 780, .13)]:
+    s = [f'<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="{color}"/>'
+         '<stop offset="1" stop-color="#1c5fb4"/></linearGradient></defs>',
+         f'<rect width="{w}" height="{h}" fill="url(#g)"/>']
+    for amp, fase, y0, op in [(60, 0, 170, .38), (40, 1.3, 330, .26), (85, 2.1, 640, .32), (35, .6, 790, .24)]:
         pts = " ".join(f"{x},{y0 + amp * math.sin(x / 90 + fase):.1f}" for x in range(0, w + 1, 20))
-        s.append(f'<polyline points="{pts}" fill="none" stroke="{color}" stroke-width="2.5" opacity="{op}"/>')
+        s.append(f'<polyline points="{pts}" fill="none" stroke="#ffffff" stroke-width="3" opacity="{op}"/>')
     rng = random.Random(7)
-    for _ in range(28):
+    for _ in range(30):
         x, y = rng.randrange(0, w, 50), rng.randrange(0, h, 50)
         pts = [(x, y)]
         for _ in range(rng.randint(2, 4)):
@@ -48,10 +52,10 @@ def _svg_fondo(color):
                 y += rng.choice([-1, 1]) * rng.randrange(50, 200, 50)
             pts.append((x, y))
         d = " ".join(f"{a},{b}" for a, b in pts)
-        s.append(f'<polyline points="{d}" fill="none" stroke="{color}" stroke-width="2" opacity=".14"/>')
-        s.append(f'<circle cx="{pts[-1][0]}" cy="{pts[-1][1]}" r="6" fill="none" stroke="{color}" stroke-width="2" opacity=".24"/>')
-    s.append(f'<text x="{w - 40}" y="{h - 45}" text-anchor="end" font-family="Georgia, serif" font-size="120" '
-             f'font-weight="bold" fill="{color}" opacity=".07">FIEE · UNMSM</text>')
+        s.append(f'<polyline points="{d}" fill="none" stroke="#ffffff" stroke-width="2.5" opacity=".30"/>')
+        s.append(f'<circle cx="{pts[-1][0]}" cy="{pts[-1][1]}" r="7" fill="none" stroke="#ffffff" stroke-width="2.5" opacity=".45"/>')
+    s.append(f'<text x="{w - 40}" y="{h - 45}" text-anchor="end" font-family="Georgia, serif" font-size="130" '
+             'font-weight="bold" fill="#ffffff" opacity=".12">FIEE · UNMSM</text>')
     svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}" preserveAspectRatio="xMidYMid slice">{"".join(s)}</svg>'
     return "data:image/svg+xml;base64," + base64.b64encode(svg.encode()).decode()
 
@@ -60,15 +64,20 @@ def _svg_fondo(color):
 def _css():
     foto = _archivo(["fondo_fiee.jpg", "fondo_fiee.jpeg", "fondo_fiee.png"])
     imagen = _uri(foto) if foto else _svg_fondo(COLOR_BANNER)
-    velo = ".55" if foto else ".12"      # una foto lleva más velo para que el texto se lea
+    velo, velo_osc = (".20", ".40") if foto else ("0", "0")     # una foto lleva un velo leve; el diseño propio, ninguno
     css = """
-    :root { --img: url("__IMG__"); --velo: rgba(255,255,255,__VELO__); --panel: rgba(255,255,255,.92); }
-    @media (prefers-color-scheme: dark) { :root { --velo: rgba(8,12,24,.80); --panel: rgba(14,17,23,.90); } }
-    .stApp { background-image: linear-gradient(var(--velo), var(--velo)), var(--img); background-size: cover;
-             background-position: center; background-attachment: fixed; }
-    [data-testid="stHeader"] { background: transparent; }
-    .stApp .block-container { background: var(--panel); border-radius: 14px; padding: 1.2rem 2rem 2rem; margin-top: 1rem; }
+    :root { --img: url("__IMG__"); --velo: rgba(255,255,255,__VELO__); --panel: rgba(255,255,255,__PANEL__); }
+    @media (prefers-color-scheme: dark) { :root { --velo: rgba(0,0,0,__VELOOSC__); --panel: rgba(14,17,23,__PANEL__); } }
+    .stApp, [data-testid="stApp"], [data-testid="stAppViewContainer"] {
+      background-image: linear-gradient(var(--velo), var(--velo)), var(--img) !important;
+      background-size: cover !important; background-position: center !important;
+      background-repeat: no-repeat !important; background-attachment: fixed !important; }
+    [data-testid="stHeader"], [data-testid="stMain"], section.main { background: transparent !important; }
+    .stApp .block-container, [data-testid="stMainBlockContainer"] {
+      background: var(--panel) !important; border-radius: 14px; max-width: __ANCHO__ !important;
+      padding: 1.2rem 2rem 2rem !important; margin: 1rem auto !important; }
     [data-testid="stSidebar"] { background: var(--panel) !important; }
+    [data-testid="stSidebar"] > div:first-child { background: transparent !important; }
     .fiee-banner { display: flex; align-items: center; gap: 1.1rem; padding: 1rem 1.4rem; margin-bottom: .8rem;
                    border-radius: 14px; border-left: 8px solid __ACENTO__; color: #fff;
                    background: linear-gradient(100deg, __BANNER__, #14468f); box-shadow: 0 4px 14px rgba(0,0,0,.25); }
@@ -78,7 +87,7 @@ def _css():
     .fiee-titulo { font-size: 2rem; font-weight: 800; line-height: 1.15; margin-top: .25rem; }
     .fiee-sub { font-size: .95rem; opacity: .92; }
     """
-    css = css.replace("__IMG__", imagen).replace("__VELO__", velo).replace("__ACENTO__", COLOR_ACENTO).replace("__BANNER__", COLOR_BANNER)
+    css = css.replace("__IMG__", imagen).replace("__VELO__", velo).replace("__VELOOSC__", velo_osc).replace("__PANEL__", str(OPACIDAD_PANEL)).replace("__ANCHO__", ANCHO_MAX).replace("__ACENTO__", COLOR_ACENTO).replace("__BANNER__", COLOR_BANNER)
     return "<style>" + re.sub(r"\s+", " ", css) + "</style>"
 
 
